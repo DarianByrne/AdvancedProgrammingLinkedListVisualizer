@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.0)
-project(AdvancedProgrammingStarterProject)
+project(AdvancedProgrammingLinkedListVisualizer)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -24,7 +24,7 @@ include_directories(build/external/raylib-master/src/external/glfw/include/GLFW)
 include_directories(build/external/raylib-master/src/external/glfw/src)
 include_directories(include)
 
-add_executable(AdvancedProgrammingStarterProject
+add_executable(AdvancedProgrammingLinkedListVisualizer
         build/external/raylib-master/examples/audio/audio_mixed_processor.c
         build/external/raylib-master/examples/audio/audio_module_playing.c
         build/external/raylib-master/examples/audio/audio_music_stream.c

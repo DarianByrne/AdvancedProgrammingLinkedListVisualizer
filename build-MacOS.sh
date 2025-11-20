@@ -4,4 +4,4 @@ cd build
 ./premake5.osx gmake
 cd ..
 make
-./bin/Debug/AdvancedProgrammingStarterProject
+./bin/Debug/AdvancedProgrammingLinkedListVisualizer
