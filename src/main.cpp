@@ -180,17 +180,21 @@ public:
 
     // Bubble sort visualization: we enqueue compare and swap operations
     void BubbleSort() {
-        // We'll perform logical swaps only when swap op finishes (onFinish callback)
-        // To keep the animation queue consistent we prepare a snapshot of swaps needed.
+        // Create a copy of the values to simulate the sorting and determine swaps needed
         int n = Count();
         if (n < 2) return;
-        // Create bubble passes
+        std::vector<int> values;
+        for (int i = 0; i < n; ++i) values.push_back(nodes[i]->value);
+        
+        // Simulate bubble sort on the copy to generate correct swap sequence
         for (int pass = 0; pass < n - 1; ++pass) {
             bool swapped = false;
             for (int i = 0; i < n - pass - 1; ++i) {
                 Op cmp; cmp.type = OpType::Compare; cmp.idxA = i; cmp.idxB = i + 1; cmp.duration = 0.5f;
                 anim->Enqueue(cmp);
-                if (nodes[i]->value > nodes[i+1]->value) {
+                if (values[i] > values[i+1]) {
+                    // Swap in our simulation
+                    std::swap(values[i], values[i+1]);
                     // enqueue swap op
                     Op sw; sw.type = OpType::Swap; sw.idxA = i; sw.idxB = i + 1; sw.duration = 0.6f;
                     anim->Enqueue(sw);
@@ -246,8 +250,7 @@ public:
                 // physically swap node objects in vector
                 if (ValidIndex(op.idxA) && ValidIndex(op.idxB)) {
                     std::swap(nodes[op.idxA], nodes[op.idxB]);
-                    // After swapping objects, ensure their current pos is where they are visually
-                    // Set pos to current targetPos to avoid jumps, then recompute targets
+                    // After swapping objects, recompute targets so nodes know their new positions
                     RecomputeTargets();
                 }
                 break;
