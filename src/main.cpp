@@ -551,8 +551,8 @@ int main() {
         // speed bar interaction
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(mouse, speedBar)) {
             float rel = (mouse.x - speedBar.x) / speedBar.width;
-            rel = std::clamp(rel, 0.1f, 3.0f);
-            speed = rel * 2.0f; // map to [0.2, 6.0]
+            rel = std::clamp(rel, 0.01f, 1.0f);
+            speed = rel * 10.0f; // map to [0, 10.0]
             animator.speed = speed;
         }
 
@@ -586,9 +586,9 @@ int main() {
         DrawText("Speed", (int)speedBar.x - 60, (int)speedBar.y + 2, 18, DARKGRAY);
         DrawRectangleLinesEx(speedBar, 2.0f, DARKGRAY);
         // slider fill
-        float fillW = std::clamp((speed / 6.0f) * speedBar.width, 4.0f, speedBar.width);
+        float fillW = std::clamp((speed / 10.0f) * speedBar.width, 4.0f, speedBar.width);
         DrawRectangle(speedBar.x, speedBar.y, fillW, speedBar.height, LIGHTGRAY);
-        DrawText( TextFormat("%.2fx", animator.speed), speedBar.x + speedBar.width + 8, speedBar.y, 16, DARKGRAY);
+        DrawText( TextFormat("%.1fx", animator.speed), speedBar.x + speedBar.width + 8, speedBar.y, 16, DARKGRAY);
 
         // list area background
         Rectangle listBg = { LIST_AREA_ORIGIN.x - 10, LIST_AREA_ORIGIN.y - 40, SCREEN_W - 2*LIST_AREA_ORIGIN.x + 20, 220 };
