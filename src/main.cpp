@@ -456,8 +456,8 @@ int main() {
 
     // UI elements
     std::vector<Button> buttons;
-    TextBox inputNum(60, 60, 120, 36);
-    TextBox inputAfter(200, 60, 120, 36);
+    TextBox inputNum(60, 80, 120, 36);
+    TextBox inputAfter(200, 80, 120, 36);
 
     bool modeInsertAfter = false;
     bool deleteByPositionMode = false;
@@ -576,8 +576,8 @@ int main() {
         DrawText(help.c_str(), 60, 36, 12, GRAY);
 
         // Draw input labels
-        DrawText("Value:", (int)inputNum.rect.x - 50, (int)inputNum.rect.y + 8, 18, DARKGRAY);
-        DrawText("After:", (int)inputAfter.rect.x - 50, (int)inputAfter.rect.y + 8, 18, DARKGRAY);
+        DrawText("Value:", (int)inputNum.rect.x, (int)inputNum.rect.y - 20, 14, DARKGRAY);
+        DrawText("After:", (int)inputAfter.rect.x, (int)inputAfter.rect.y - 20, 14, DARKGRAY);
 
         inputNum.Draw();
         inputAfter.Draw();
