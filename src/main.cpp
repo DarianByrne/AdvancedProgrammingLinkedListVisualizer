@@ -451,6 +451,14 @@ int main() {
     Animator animator;
     LinkedListVisual list(&animator);
 
+    // Camera for auto-zoom
+    Camera2D camera = { 0 };
+    camera.target = { LIST_AREA_ORIGIN.x, LIST_AREA_ORIGIN.y };
+    camera.offset = { LIST_AREA_ORIGIN.x, LIST_AREA_ORIGIN.y };
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+    float targetZoom = 1.0f;
+
     // default data
     list.PushTail(10); list.PushTail(30); list.PushTail(20);
 
@@ -567,6 +575,23 @@ int main() {
         }
         list.Update(dt);
 
+        // Calculate camera zoom to fit list in listBg
+        Rectangle listBg = { LIST_AREA_ORIGIN.x - 10, LIST_AREA_ORIGIN.y - 40, SCREEN_W - 2*LIST_AREA_ORIGIN.x + 20, 220 };
+        if (list.Count() > 0) {
+            float listWidth = list.Count() * (NODE_WIDTH + NODE_SPACING) - NODE_SPACING;
+            float availableWidth = listBg.width - 40; // padding
+            if (listWidth > availableWidth) {
+                targetZoom = availableWidth / listWidth;
+            } else {
+                targetZoom = 1.0f;
+            }
+        } else {
+            targetZoom = 1.0f;
+        }
+        
+        // Smooth zoom transition
+        camera.zoom = Lerp(camera.zoom, targetZoom, dt * 5.0f);
+
         // Drawing
         BeginDrawing();
         ClearBackground(RAYWHITE);
@@ -594,12 +619,13 @@ int main() {
         DrawText( TextFormat("%.1fx", animator.speed), speedBar.x + speedBar.width + 8, speedBar.y, 16, DARKGRAY);
 
         // list area background
-        Rectangle listBg = { LIST_AREA_ORIGIN.x - 10, LIST_AREA_ORIGIN.y - 40, SCREEN_W - 2*LIST_AREA_ORIGIN.x + 20, 220 };
         DrawRectangleRec(listBg, Fade(LIGHTGRAY, 0.05f));
         DrawRectangleLinesEx(listBg, 2.0f, Fade(DARKGRAY, 0.06f));
 
-        // draw list
+        // Begin camera mode for list drawing
+        BeginMode2D(camera);
         list.Draw();
+        EndMode2D();
 
         // Footer: current values
         DrawText(("List: " + list.ValuesString()).c_str(), 60, SCREEN_H - 36, 16, DARKGRAY);
