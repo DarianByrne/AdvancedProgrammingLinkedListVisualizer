@@ -533,12 +533,40 @@ int main() {
     // Delete
     buttons.push_back(Button(bx + (bw + gap)*3, by, bw, bh, "Delete Value", [&]() {
         int v = inputNum.GetInt();
-        if (!animator.Busy()) list.DeleteByValue(v);
+        if (!animator.Busy()) {
+            if (list.DeleteByValue(v)) {
+                currentAlgorithm = "Delete by Value";
+                algorithmSteps = {
+                    "1. if head.value == target:",
+                    "2.     head = head.next",
+                    "3.     return",
+                    "4. current = head",
+                    "5. while current.next != null:",
+                    "6.     if current.next.value == target:",
+                    "7.         current.next = current.next.next",
+                    "8.         return",
+                    "9.     current = current.next"
+                };
+            }
+        }
     }));
 
     buttons.push_back(Button(bx + (bw + gap)*4, by, bw, bh, "Delete Pos", [&]() {
         int p = inputNum.GetInt();
-        if (!animator.Busy()) list.DeleteByPosition(p);
+        if (!animator.Busy()) {
+            if (list.DeleteByPosition(p)) {
+                currentAlgorithm = "Delete by Position";
+                algorithmSteps = {
+                    "1. if position == 0:",
+                    "2.     head = head.next",
+                    "3.     return",
+                    "4. current = head",
+                    "5. for i = 0 to position-2:",
+                    "6.     current = current.next",
+                    "7. current.next = current.next.next"
+                };
+            }
+        }
     }));
 
     // Sort
@@ -659,7 +687,7 @@ int main() {
         EndMode2D();
 
         // Algorithm display area
-        Rectangle algoBg = { LIST_AREA_ORIGIN.x - 10, LIST_AREA_ORIGIN.y + 200, SCREEN_W - 2*LIST_AREA_ORIGIN.x + 20, 250 };
+        Rectangle algoBg = { LIST_AREA_ORIGIN.x - 10, LIST_AREA_ORIGIN.y + 200, SCREEN_W - 2*LIST_AREA_ORIGIN.x + 20, 300 };
         DrawRectangleRec(algoBg, Fade(SKYBLUE, 0.05f));
         DrawRectangleLinesEx(algoBg, 2.0f, Fade(DARKBLUE, 0.3f));
         
