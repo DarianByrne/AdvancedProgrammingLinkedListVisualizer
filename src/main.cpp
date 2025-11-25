@@ -39,7 +39,7 @@ const Color POINTER_COL = DARKBLUE;
 
 // ----------------------------- Animation / Operation system ---------------
 
-enum class OpType { Compare, Swap, InsertVisual, DeleteVisual, Move, HighlightNone, Pause, Search, InsertAfter };
+enum class OpType { Compare, Swap, InsertVisual, DeleteVisual, Move, HighlightNone, Pause, Search, InsertAfter, HighlightAlgorithmLine };
 
 struct Op {
     OpType type;
@@ -127,38 +127,102 @@ public:
     int Count() const { return (int)nodes.size(); }
 
     void PushTail(int value) {
+        // Highlight line 0: tail.next = newNode
+        Op h1; h1.type = OpType::HighlightAlgorithmLine; h1.idxA = 0; h1.duration = 0.4f;
+        anim->Enqueue(h1);
+        
         // immediate model update, but visual movement via Op queue
         auto node = std::make_unique<VNode>(value, SpawnPosForNew());
         nodes.push_back(std::move(node));
         RecomputeTargets();
+        
+        // Highlight line 1: tail = newNode
+        Op h2; h2.type = OpType::HighlightAlgorithmLine; h2.idxA = 1; h2.duration = 0.4f;
+        anim->Enqueue(h2);
+        
         // Enqueue an insert visual op
         Op o; o.type = OpType::InsertVisual; o.idxA = (int)nodes.size() - 1; o.duration = 0.6f;
         anim->Enqueue(o);
+        
+        // Clear highlight at end
+        Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+        anim->Enqueue(clear);
     }
 
     void PushHead(int value) {
+        // Highlight line 0: newNode.next = head
+        Op h1; h1.type = OpType::HighlightAlgorithmLine; h1.idxA = 0; h1.duration = 0.4f;
+        anim->Enqueue(h1);
+        
         auto node = std::make_unique<VNode>(value, SpawnPosForNew());
         nodes.insert(nodes.begin(), std::move(node));
         RecomputeTargets();
+        
+        // Highlight line 1: head = newNode
+        Op h2; h2.type = OpType::HighlightAlgorithmLine; h2.idxA = 1; h2.duration = 0.4f;
+        anim->Enqueue(h2);
+        
         Op o; o.type = OpType::InsertVisual; o.idxA = 0; o.duration = 0.6f;
         anim->Enqueue(o);
+        
+        // Clear highlight at end
+        Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+        anim->Enqueue(clear);
     }
 
     // insert after the first node that equals 'afterValue'
     bool InsertAfterValue(int afterValue, int newValue) {
+        // Highlight line 0: current = head
+        Op h0; h0.type = OpType::HighlightAlgorithmLine; h0.idxA = 0; h0.duration = 0.3f;
+        anim->Enqueue(h0);
+        
         for (int i = 0; i < Count(); ++i) {
+            // Highlight line 1: while current != null
+            Op h1; h1.type = OpType::HighlightAlgorithmLine; h1.idxA = 1; h1.duration = 0.2f;
+            anim->Enqueue(h1);
+            
             // Enqueue search visualization
             Op search; search.type = OpType::Search; search.idxA = i; search.duration = 0.4f;
             anim->Enqueue(search);
             
+            // Highlight line 2: if current.value == target
+            Op h2; h2.type = OpType::HighlightAlgorithmLine; h2.idxA = 2; h2.duration = 0.3f;
+            anim->Enqueue(h2);
+            
             if (nodes[i]->value == afterValue) {
+                // Highlight line 3: newNode.next = current.next
+                Op h3; h3.type = OpType::HighlightAlgorithmLine; h3.idxA = 3; h3.duration = 0.4f;
+                anim->Enqueue(h3);
+                
+                // Highlight line 4: current.next = newNode
+                Op h4; h4.type = OpType::HighlightAlgorithmLine; h4.idxA = 4; h4.duration = 0.4f;
+                anim->Enqueue(h4);
+                
                 // Enqueue the actual insertion operation with the value
                 Op insertOp; insertOp.type = OpType::InsertAfter; 
                 insertOp.idxA = i; insertOp.value = newValue; insertOp.duration = 0.01f;
                 anim->Enqueue(insertOp);
+                
+                // Highlight line 5: break
+                Op h5; h5.type = OpType::HighlightAlgorithmLine; h5.idxA = 5; h5.duration = 0.2f;
+                anim->Enqueue(h5);
+                
+                // Clear highlight at end
+                Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+                anim->Enqueue(clear);
+                
                 return true;
+            } else {
+                // Highlight line 6: current = current.next
+                Op h6; h6.type = OpType::HighlightAlgorithmLine; h6.idxA = 6; h6.duration = 0.3f;
+                anim->Enqueue(h6);
             }
         }
+        
+        // Clear highlight if not found
+        Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+        anim->Enqueue(clear);
+        
         return false;
     }
 
@@ -232,6 +296,9 @@ public:
     // Called by Animator on op start to set visual cues (like highlighting)
     void HandleOpStart(const Op &op) {
         switch (op.type) {
+            case OpType::HighlightAlgorithmLine:
+                // This is handled in main loop, just store the index
+                break;
             case OpType::Search:
                 // Highlight current node being searched
                 ClearHighlights();
@@ -285,6 +352,9 @@ public:
     // Called by Animator when op finishes to finalize logical changes
     void HandleOpFinish(const Op &op) {
         switch (op.type) {
+            case OpType::HighlightAlgorithmLine:
+                // do nothing, highlighting handled in main loop
+                break;
             case OpType::Search:
                 // do nothing logical, just visual highlighting
                 break;
@@ -547,6 +617,7 @@ int main() {
     // Algorithm display
     std::string currentAlgorithm = "";
     std::vector<std::string> algorithmSteps;
+    int highlightedLine = -1;
 
     // Buttons setup
     float bx = 340;
@@ -716,6 +787,11 @@ int main() {
             animator.Update(dt * 0.0f);
         }
         list.Update(dt);
+        
+        // Update highlighted algorithm line based on current operation
+        if (animator.running && animator.current.type == OpType::HighlightAlgorithmLine) {
+            highlightedLine = animator.current.idxA;
+        }
 
         // Calculate camera zoom to fit list in listBg
         Rectangle listBg = { LIST_AREA_ORIGIN.x - 10, LIST_AREA_ORIGIN.y - 40, SCREEN_W - 2*LIST_AREA_ORIGIN.x + 20, 220 };
@@ -779,7 +855,13 @@ int main() {
             
             int stepY = algoBg.y + 40;
             for (size_t i = 0; i < algorithmSteps.size(); ++i) {
-                DrawText(algorithmSteps[i].c_str(), algoBg.x + 20, stepY, 16, DARKGRAY);
+                Color textColor = DARKGRAY;
+                // Highlight current line
+                if ((int)i == highlightedLine) {
+                    DrawRectangle(algoBg.x + 15, stepY - 3, algoBg.width - 30, 26, Fade(YELLOW, 0.4f));
+                    textColor = BLACK;
+                }
+                DrawText(algorithmSteps[i].c_str(), algoBg.x + 20, stepY, 16, textColor);
                 stepY += 30;
             }
         } else {
