@@ -571,7 +571,19 @@ int main() {
 
     // Sort
     buttons.push_back(Button(bx + (bw + gap)*5, by, bw, bh, "Bubble Sort", [&]() {
-        if (!animator.Busy()) list.BubbleSort();
+        if (!animator.Busy()) {
+            list.BubbleSort();
+            currentAlgorithm = "Bubble Sort";
+            algorithmSteps = {
+                "1. for pass = 0 to n-2:",
+                "2.     swapped = false",
+                "3.     for i = 0 to n-pass-2:",
+                "4.         if list[i] > list[i+1]:",
+                "5.             swap(list[i], list[i+1])",
+                "6.             swapped = true",
+                "7.     if not swapped: break"
+            };
+        }
     }));
 
     // Step / Play control
