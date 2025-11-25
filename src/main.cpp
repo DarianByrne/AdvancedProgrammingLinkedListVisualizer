@@ -228,19 +228,83 @@ public:
 
     // delete by value: deletes first occurrence
     bool DeleteByValue(int value) {
+        // Check head case first
+        if (Count() > 0) {
+            // Highlight line 0: if head.value == target
+            Op h0; h0.type = OpType::HighlightAlgorithmLine; h0.idxA = 0; h0.duration = 0.3f;
+            anim->Enqueue(h0);
+            
+            // Search visualization for head
+            Op searchHead; searchHead.type = OpType::Search; searchHead.idxA = 0; searchHead.duration = 0.4f;
+            anim->Enqueue(searchHead);
+            
+            if (nodes[0]->value == value) {
+                // Highlight line 1: head = head.next
+                Op h1; h1.type = OpType::HighlightAlgorithmLine; h1.idxA = 1; h1.duration = 0.4f;
+                anim->Enqueue(h1);
+                
+                // mark node to be removed visually
+                Op o; o.type = OpType::DeleteVisual; o.idxA = 0; o.duration = 0.3f;
+                anim->Enqueue(o);
+                
+                // Highlight line 2: return
+                Op h2; h2.type = OpType::HighlightAlgorithmLine; h2.idxA = 2; h2.duration = 0.2f;
+                anim->Enqueue(h2);
+                
+                // Clear highlight
+                Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+                anim->Enqueue(clear);
+                
+                return true;
+            }
+        }
+        
+        // Highlight line 3: current = head
+        Op h3; h3.type = OpType::HighlightAlgorithmLine; h3.idxA = 3; h3.duration = 0.3f;
+        anim->Enqueue(h3);
+        
         for (int i = 0; i < Count(); ++i) {
+            // Highlight line 4: while current.next != null
+            Op h4; h4.type = OpType::HighlightAlgorithmLine; h4.idxA = 4; h4.duration = 0.2f;
+            anim->Enqueue(h4);
+            
             // Enqueue search visualization
             Op search; search.type = OpType::Search; search.idxA = i; search.duration = 0.4f;
             anim->Enqueue(search);
             
+            // Highlight line 5: if current.next.value == target
+            Op h5; h5.type = OpType::HighlightAlgorithmLine; h5.idxA = 5; h5.duration = 0.3f;
+            anim->Enqueue(h5);
+            
             if (nodes[i]->value == value) {
+                // Highlight line 6: current.next = current.next.next
+                Op h6; h6.type = OpType::HighlightAlgorithmLine; h6.idxA = 6; h6.duration = 0.4f;
+                anim->Enqueue(h6);
+                
                 // mark node to be removed visually
-                Op o; o.type = OpType::DeleteVisual; o.idxA = i; o.duration = 0.0f;
+                Op o; o.type = OpType::DeleteVisual; o.idxA = i; o.duration = 0.3f;
                 anim->Enqueue(o);
-                // actual removal will be done on op finish
+                
+                // Highlight line 7: return
+                Op h7; h7.type = OpType::HighlightAlgorithmLine; h7.idxA = 7; h7.duration = 0.2f;
+                anim->Enqueue(h7);
+                
+                // Clear highlight
+                Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+                anim->Enqueue(clear);
+                
                 return true;
+            } else {
+                // Highlight line 8: current = current.next
+                Op h8; h8.type = OpType::HighlightAlgorithmLine; h8.idxA = 8; h8.duration = 0.3f;
+                anim->Enqueue(h8);
             }
         }
+        
+        // Clear highlight if not found
+        Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+        anim->Enqueue(clear);
+        
         return false;
     }
 
@@ -248,14 +312,64 @@ public:
     bool DeleteByPosition(int pos) {
         if (pos < 0 || pos >= Count()) return false;
         
-        // Enqueue search visualization for traversal to position
-        for (int i = 0; i <= pos; ++i) {
-            Op search; search.type = OpType::Search; search.idxA = i; search.duration = 0.4f;
-            anim->Enqueue(search);
+        // Highlight line 0: if position == 0
+        Op h0; h0.type = OpType::HighlightAlgorithmLine; h0.idxA = 0; h0.duration = 0.3f;
+        anim->Enqueue(h0);
+        
+        if (pos == 0) {
+            // Search visualization for head
+            Op searchHead; searchHead.type = OpType::Search; searchHead.idxA = 0; searchHead.duration = 0.4f;
+            anim->Enqueue(searchHead);
+            
+            // Highlight line 1: head = head.next
+            Op h1; h1.type = OpType::HighlightAlgorithmLine; h1.idxA = 1; h1.duration = 0.4f;
+            anim->Enqueue(h1);
+            
+            Op o; o.type = OpType::DeleteVisual; o.idxA = pos; o.duration = 0.3f;
+            anim->Enqueue(o);
+            
+            // Highlight line 2: return
+            Op h2; h2.type = OpType::HighlightAlgorithmLine; h2.idxA = 2; h2.duration = 0.2f;
+            anim->Enqueue(h2);
+            
+            // Clear highlight
+            Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+            anim->Enqueue(clear);
+            
+            return true;
         }
         
-        Op o; o.type = OpType::DeleteVisual; o.idxA = pos; o.duration = 0.0f;
+        // Highlight line 3: current = head
+        Op h3; h3.type = OpType::HighlightAlgorithmLine; h3.idxA = 3; h3.duration = 0.3f;
+        anim->Enqueue(h3);
+        
+        // Enqueue search visualization for traversal to position
+        for (int i = 0; i <= pos; ++i) {
+            // Highlight line 4: for i = 0 to position-2
+            Op h4; h4.type = OpType::HighlightAlgorithmLine; h4.idxA = 4; h4.duration = 0.2f;
+            anim->Enqueue(h4);
+            
+            Op search; search.type = OpType::Search; search.idxA = i; search.duration = 0.4f;
+            anim->Enqueue(search);
+            
+            if (i < pos) {
+                // Highlight line 5: current = current.next
+                Op h5; h5.type = OpType::HighlightAlgorithmLine; h5.idxA = 5; h5.duration = 0.3f;
+                anim->Enqueue(h5);
+            }
+        }
+        
+        // Highlight line 6: current.next = current.next.next
+        Op h6; h6.type = OpType::HighlightAlgorithmLine; h6.idxA = 6; h6.duration = 0.4f;
+        anim->Enqueue(h6);
+        
+        Op o; o.type = OpType::DeleteVisual; o.idxA = pos; o.duration = 0.3f;
         anim->Enqueue(o);
+        
+        // Clear highlight
+        Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+        anim->Enqueue(clear);
+        
         return true;
     }
 
