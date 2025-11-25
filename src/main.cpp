@@ -26,7 +26,7 @@ static std::string ToString(int v) {
 // ----------------------------- Visual constants ----------------------------
 
 const int SCREEN_W = 1100;
-const int SCREEN_H = 700;
+const int SCREEN_H = 850;
 const Vector2 LIST_AREA_ORIGIN = { 60, 180 };
 const float NODE_WIDTH = 84;
 const float NODE_HEIGHT = 48;
@@ -470,6 +470,10 @@ int main() {
     bool modeInsertAfter = false;
     bool deleteByPositionMode = false;
     bool autoPlay = true;
+    
+    // Algorithm display
+    std::string currentAlgorithm = "";
+    std::vector<std::string> algorithmSteps;
 
     // Buttons setup
     float bx = 340;
@@ -480,19 +484,46 @@ int main() {
 
     buttons.push_back(Button(bx, by, bw, bh, "Insert Head", [&]() {
         int v = inputNum.GetInt();
-        if (!animator.Busy()) list.PushHead(v);
+        if (!animator.Busy()) {
+            list.PushHead(v);
+            currentAlgorithm = "Insert Head";
+            algorithmSteps = {
+                "1. newNode.next = head",
+                "2. head = newNode"
+            };
+        }
     }));
 
     buttons.push_back(Button(bx + (bw + gap)*1, by, bw, bh, "Insert Tail", [&]() {
         int v = inputNum.GetInt();
-        if (!animator.Busy()) list.PushTail(v);
+        if (!animator.Busy()) {
+            list.PushTail(v);
+            currentAlgorithm = "Insert Tail";
+            algorithmSteps = {
+                "1. current = head",
+                "2. while current.next != null:",
+                "3.     current = current.next",
+                "4. current.next = newNode"
+            };
+        }
     }));
 
     buttons.push_back(Button(bx + (bw + gap)*2, by, bw, bh, "Insert After", [&]() {
         int v = inputNum.GetInt();
         int after = inputAfter.GetInt();
         if (!animator.Busy()) {
-            if (!list.InsertAfterValue(after, v)) {
+            if (list.InsertAfterValue(after, v)) {
+                currentAlgorithm = "Insert After";
+                algorithmSteps = {
+                    "1. current = head",
+                    "2. while current != null:",
+                    "3.     if current.value == target:",
+                    "4.         newNode.next = current.next",
+                    "5.         current.next = newNode",
+                    "6.         break",
+                    "7.     current = current.next"
+                };
+            } else {
                 // small flash or debug; here we enqueue a brief pause to show failure
                 Op p; p.type = OpType::Pause; p.duration = 0.3f; animator.Enqueue(p);
             }
@@ -626,6 +657,23 @@ int main() {
         BeginMode2D(camera);
         list.Draw();
         EndMode2D();
+
+        // Algorithm display area
+        Rectangle algoBg = { LIST_AREA_ORIGIN.x - 10, LIST_AREA_ORIGIN.y + 200, SCREEN_W - 2*LIST_AREA_ORIGIN.x + 20, 250 };
+        DrawRectangleRec(algoBg, Fade(SKYBLUE, 0.05f));
+        DrawRectangleLinesEx(algoBg, 2.0f, Fade(DARKBLUE, 0.3f));
+        
+        if (!currentAlgorithm.empty()) {
+            DrawText(("Algorithm: " + currentAlgorithm).c_str(), algoBg.x + 10, algoBg.y + 10, 18, DARKBLUE);
+            
+            int stepY = algoBg.y + 40;
+            for (size_t i = 0; i < algorithmSteps.size(); ++i) {
+                DrawText(algorithmSteps[i].c_str(), algoBg.x + 20, stepY, 16, DARKGRAY);
+                stepY += 30;
+            }
+        } else {
+            DrawText("Select an operation to see the algorithm", algoBg.x + 10, algoBg.y + algoBg.height / 2 - 10, 16, GRAY);
+        }
 
         // Footer: current values
         DrawText(("List: " + list.ValuesString()).c_str(), 60, SCREEN_H - 36, 16, DARKGRAY);
