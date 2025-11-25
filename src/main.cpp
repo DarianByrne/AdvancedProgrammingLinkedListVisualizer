@@ -99,10 +99,13 @@ struct VNode {
     // position interpolation for animations
     Vector2 pos;       // current
     Vector2 targetPos; // where it should go
+    Vector2 swapStartPos; // position when swap started
     Color color;
     bool highlight = false;
+    bool isSwapping = false;
+    bool swapArcUp = false; // true for over-top arc, false for under-bottom arc
 
-    VNode(int v = 0, Vector2 p = {0,0}) : value(v), pos(p), targetPos(p), color(NODE_COL) {}
+    VNode(int v = 0, Vector2 p = {0,0}) : value(v), pos(p), targetPos(p), swapStartPos(p), color(NODE_COL) {}
 };
 
 class LinkedListVisual {
@@ -168,7 +171,7 @@ public:
             
             if (nodes[i]->value == value) {
                 // mark node to be removed visually
-                Op o; o.type = OpType::DeleteVisual; o.idxA = i; o.duration = 0.6f;
+                Op o; o.type = OpType::DeleteVisual; o.idxA = i; o.duration = 0.0f;
                 anim->Enqueue(o);
                 // actual removal will be done on op finish
                 return true;
@@ -187,7 +190,7 @@ public:
             anim->Enqueue(search);
         }
         
-        Op o; o.type = OpType::DeleteVisual; o.idxA = pos; o.duration = 0.6f;
+        Op o; o.type = OpType::DeleteVisual; o.idxA = pos; o.duration = 0.0f;
         anim->Enqueue(o);
         return true;
     }
@@ -252,9 +255,17 @@ public:
                 if (ValidIndex(op.idxB)) nodes[op.idxB]->highlight = true;
                 break;
             case OpType::Swap:
-                // highlights remain; we'll animate movement using target positions swap
-                // swap target positions immediately so nodes animate to new places
-                SwapTargets(op.idxA, op.idxB);
+                // Set up arc swap animation
+                if (ValidIndex(op.idxA) && ValidIndex(op.idxB)) {
+                    nodes[op.idxA]->swapStartPos = nodes[op.idxA]->pos;
+                    nodes[op.idxB]->swapStartPos = nodes[op.idxB]->pos;
+                    nodes[op.idxA]->isSwapping = true;
+                    nodes[op.idxB]->isSwapping = true;
+                    nodes[op.idxA]->swapArcUp = true;  // first node goes over top
+                    nodes[op.idxB]->swapArcUp = false; // second node goes under bottom
+                    // swap target positions so they know where to end up
+                    SwapTargets(op.idxA, op.idxB);
+                }
                 break;
             case OpType::InsertVisual:
                 // highlight inserted node
@@ -286,6 +297,8 @@ public:
             case OpType::Swap:
                 // physically swap node objects in vector
                 if (ValidIndex(op.idxA) && ValidIndex(op.idxB)) {
+                    nodes[op.idxA]->isSwapping = false;
+                    nodes[op.idxB]->isSwapping = false;
                     std::swap(nodes[op.idxA], nodes[op.idxB]);
                     // After swapping objects, recompute targets so nodes know their new positions
                     RecomputeTargets();
@@ -313,15 +326,38 @@ public:
     }
 
     void Update(float dt) {
-        // animate each node towards its target position (simple lerp)
-        float p = anim->Progress(); // allows step-synced animations too
-        // but use dt for smooth movement too: we mix both approaches
+        // animate each node towards its target position
+        float p = anim->Progress(); // animation progress 0 to 1
+        
         for (size_t i = 0; i < nodes.size(); ++i) {
-            // Smooth damp: move fractionally towards target
-            nodes[i]->pos = Lerp(nodes[i]->pos, nodes[i]->targetPos, std::min(1.0f, dt * 8.0f + p*0.2f));
-            // clamp tiny differences
-            if (fabs(nodes[i]->pos.x - nodes[i]->targetPos.x) < 0.3f) nodes[i]->pos.x = nodes[i]->targetPos.x;
-            if (fabs(nodes[i]->pos.y - nodes[i]->targetPos.y) < 0.3f) nodes[i]->pos.y = nodes[i]->targetPos.y;
+            if (nodes[i]->isSwapping && anim->running && anim->current.type == OpType::Swap) {
+                // Arc motion for swapping nodes
+                float t = p; // use animation progress
+                Vector2 start = nodes[i]->swapStartPos;
+                Vector2 end = nodes[i]->targetPos;
+                
+                // Linear interpolation for x
+                float x = Lerp(start.x, end.x, t);
+                
+                // Arc motion for y: create semicircle
+                float arcHeight = NODE_HEIGHT * 1.5f;
+                float yOffset = sin(t * 3.14159f) * arcHeight; // semicircle
+                
+                if (nodes[i]->swapArcUp) {
+                    // Arc over the top (negative y offset)
+                    nodes[i]->pos.y = Lerp(start.y, end.y, t) - yOffset;
+                } else {
+                    // Arc under the bottom (positive y offset)
+                    nodes[i]->pos.y = Lerp(start.y, end.y, t) + yOffset;
+                }
+                nodes[i]->pos.x = x;
+            } else {
+                // Smooth damp: move fractionally towards target
+                nodes[i]->pos = Lerp(nodes[i]->pos, nodes[i]->targetPos, std::min(1.0f, dt * 8.0f + p*0.2f));
+                // clamp tiny differences
+                if (fabs(nodes[i]->pos.x - nodes[i]->targetPos.x) < 0.3f) nodes[i]->pos.x = nodes[i]->targetPos.x;
+                if (fabs(nodes[i]->pos.y - nodes[i]->targetPos.y) < 0.3f) nodes[i]->pos.y = nodes[i]->targetPos.y;
+            }
         }
     }
 
