@@ -39,7 +39,7 @@ const Color POINTER_COL = DARKBLUE;
 
 // ----------------------------- Animation / Operation system ---------------
 
-enum class OpType { Compare, Swap, InsertVisual, DeleteVisual, Move, HighlightNone, Pause };
+enum class OpType { Compare, Swap, InsertVisual, DeleteVisual, Move, HighlightNone, Pause, Search, InsertAfter };
 
 struct Op {
     OpType type;
@@ -144,12 +144,15 @@ public:
     // insert after the first node that equals 'afterValue'
     bool InsertAfterValue(int afterValue, int newValue) {
         for (int i = 0; i < Count(); ++i) {
+            // Enqueue search visualization
+            Op search; search.type = OpType::Search; search.idxA = i; search.duration = 0.4f;
+            anim->Enqueue(search);
+            
             if (nodes[i]->value == afterValue) {
-                auto node = std::make_unique<VNode>(newValue, SpawnPosForNew());
-                nodes.insert(nodes.begin() + i + 1, std::move(node));
-                RecomputeTargets();
-                Op o; o.type = OpType::InsertVisual; o.idxA = i + 1; o.duration = 0.6f;
-                anim->Enqueue(o);
+                // Enqueue the actual insertion operation with the value
+                Op insertOp; insertOp.type = OpType::InsertAfter; 
+                insertOp.idxA = i; insertOp.value = newValue; insertOp.duration = 0.01f;
+                anim->Enqueue(insertOp);
                 return true;
             }
         }
@@ -159,6 +162,10 @@ public:
     // delete by value: deletes first occurrence
     bool DeleteByValue(int value) {
         for (int i = 0; i < Count(); ++i) {
+            // Enqueue search visualization
+            Op search; search.type = OpType::Search; search.idxA = i; search.duration = 0.4f;
+            anim->Enqueue(search);
+            
             if (nodes[i]->value == value) {
                 // mark node to be removed visually
                 Op o; o.type = OpType::DeleteVisual; o.idxA = i; o.duration = 0.6f;
@@ -173,6 +180,13 @@ public:
     // delete by position (0-based)
     bool DeleteByPosition(int pos) {
         if (pos < 0 || pos >= Count()) return false;
+        
+        // Enqueue search visualization for traversal to position
+        for (int i = 0; i <= pos; ++i) {
+            Op search; search.type = OpType::Search; search.idxA = i; search.duration = 0.4f;
+            anim->Enqueue(search);
+        }
+        
         Op o; o.type = OpType::DeleteVisual; o.idxA = pos; o.duration = 0.6f;
         anim->Enqueue(o);
         return true;
@@ -215,6 +229,23 @@ public:
     // Called by Animator on op start to set visual cues (like highlighting)
     void HandleOpStart(const Op &op) {
         switch (op.type) {
+            case OpType::Search:
+                // Highlight current node being searched
+                ClearHighlights();
+                if (ValidIndex(op.idxA)) nodes[op.idxA]->highlight = true;
+                break;
+            case OpType::InsertAfter:
+                // Perform the actual insertion after search completes
+                if (ValidIndex(op.idxA)) {
+                    auto node = std::make_unique<VNode>(op.value, SpawnPosForNew());
+                    nodes.insert(nodes.begin() + op.idxA + 1, std::move(node));
+                    RecomputeTargets();
+                    // Enqueue visual insertion animation
+                    Op visual; visual.type = OpType::InsertVisual; 
+                    visual.idxA = op.idxA + 1; visual.duration = 0.6f;
+                    anim->Enqueue(visual);
+                }
+                break;
             case OpType::Compare:
                 ClearHighlights();
                 if (ValidIndex(op.idxA)) nodes[op.idxA]->highlight = true;
@@ -243,6 +274,12 @@ public:
     // Called by Animator when op finishes to finalize logical changes
     void HandleOpFinish(const Op &op) {
         switch (op.type) {
+            case OpType::Search:
+                // do nothing logical, just visual highlighting
+                break;
+            case OpType::InsertAfter:
+                // insertion already happened in HandleOpStart
+                break;
             case OpType::Compare:
                 // do nothing logical
                 break;
