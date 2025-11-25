@@ -537,10 +537,8 @@ int main() {
             list.PushTail(v);
             currentAlgorithm = "Insert Tail";
             algorithmSteps = {
-                "1. current = head",
-                "2. while current.next != null:",
-                "3.     current = current.next",
-                "4. current.next = newNode"
+                "1. tail.next = newNode",
+                "2. tail = newNode"
             };
         }
     }));
