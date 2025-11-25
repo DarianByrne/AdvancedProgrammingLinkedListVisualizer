@@ -383,16 +383,41 @@ public:
         
         // Simulate bubble sort on the copy to generate correct swap sequence
         for (int pass = 0; pass < n - 1; ++pass) {
+            // Highlight line 0: for pass = 0 to n-2
+            Op h0; h0.type = OpType::HighlightAlgorithmLine; h0.idxA = 0; h0.duration = 0.3f;
+            anim->Enqueue(h0);
+            
+            // Highlight line 1: swapped = false
+            Op h1; h1.type = OpType::HighlightAlgorithmLine; h1.idxA = 1; h1.duration = 0.3f;
+            anim->Enqueue(h1);
+            
             bool swapped = false;
             for (int i = 0; i < n - pass - 1; ++i) {
+                // Highlight line 2: for i = 0 to n-pass-2
+                Op h2; h2.type = OpType::HighlightAlgorithmLine; h2.idxA = 2; h2.duration = 0.2f;
+                anim->Enqueue(h2);
+                
+                // Highlight line 3: if list[i] > list[i+1]
+                Op h3; h3.type = OpType::HighlightAlgorithmLine; h3.idxA = 3; h3.duration = 0.3f;
+                anim->Enqueue(h3);
+                
                 Op cmp; cmp.type = OpType::Compare; cmp.idxA = i; cmp.idxB = i + 1; cmp.duration = 0.5f;
                 anim->Enqueue(cmp);
                 if (values[i] > values[i+1]) {
+                    // Highlight line 4: swap(list[i], list[i+1])
+                    Op h4; h4.type = OpType::HighlightAlgorithmLine; h4.idxA = 4; h4.duration = 0.4f;
+                    anim->Enqueue(h4);
+                    
                     // Swap in our simulation
                     std::swap(values[i], values[i+1]);
                     // enqueue swap op
                     Op sw; sw.type = OpType::Swap; sw.idxA = i; sw.idxB = i + 1; sw.duration = 0.6f;
                     anim->Enqueue(sw);
+                    
+                    // Highlight line 5: swapped = true
+                    Op h5; h5.type = OpType::HighlightAlgorithmLine; h5.idxA = 5; h5.duration = 0.3f;
+                    anim->Enqueue(h5);
+                    
                     swapped = true;
                 } else {
                     // small pause to show comparison
@@ -400,11 +425,20 @@ public:
                     anim->Enqueue(p);
                 }
             }
+            
+            // Highlight line 6: if not swapped: break
+            Op h6; h6.type = OpType::HighlightAlgorithmLine; h6.idxA = 6; h6.duration = 0.3f;
+            anim->Enqueue(h6);
+            
             if (!swapped) break;
         }
         // final unhighlight op
         Op end; end.type = OpType::HighlightNone; end.duration = 0.1f;
         anim->Enqueue(end);
+        
+        // Clear algorithm highlight
+        Op clear; clear.type = OpType::HighlightAlgorithmLine; clear.idxA = -1; clear.duration = 0.1f;
+        anim->Enqueue(clear);
     }
 
     // Called by Animator on op start to set visual cues (like highlighting)
