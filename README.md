@@ -1,15 +1,15 @@
-# Raylib-Quickstart
-A simple cross platform template for setting up a project with the bleeding edge raylib code.
-Works with C or C++.
+# Advanced Programming Linked List Visualizer
+This is one of three AI projects I worked on at South East Technological University. It explores how AI can be used to support the rapid production of data structures and algorithms visualisers. The project allocated 15 hours of AI-assisted development. This repository represents the linked list visualiser, which used 5 of those hours. You can navigate to each project below.
+
+- [Array Visualizer](https://github.com/DarianByrne/AdvancedProgrammingArrayVisualizer)
+- [Binary Search Tree Visualizer](https://github.com/DarianByrne/AdvancedProgrammingBinarySearchTreeVisualizer/)
+- Linked List Visualizer
 
 ## Supported Platforms
 Quickstart supports the main 3 desktop platforms:
 * Windows
 * Linux
 * MacOS
-
-# Naming projects
-Do not name your game project 'raylib', it will conflict with the raylib library.
 
 # VSCode Users (all platforms)
 *Note* You must have a compiler toolchain installed in addition to vscode.
